@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PalmIllustration } from "@/components/tamra/PalmIllustration";
 import { DemoBadge } from "@/components/tamra/Brand";
-import { loadDemo, saveDemo } from "@/lib/demo-store";
+import { saveDemo } from "@/lib/demo-store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -70,7 +70,7 @@ function SignIn() {
         <Button type="submit" variant="outline" className="h-12 w-full text-base">دخول</Button>
       </form>
 
-      <Button onClick={() => (loadDemo(), startDemo())} className="mt-3 h-14 w-full rounded-2xl text-lg font-bold">تجربة تمرة</Button>
+      <Button onClick={startDemo} className="mt-3 h-14 w-full rounded-2xl text-lg font-bold">تجربة تمرة</Button>
       <p className="mt-4 flex items-start gap-2 text-sm text-muted-foreground">
         <Info className="mt-0.5 h-4 w-4 shrink-0" />
         تسجيل الدخول الحقيقي غير متصل بعد، ولا نحفظ أي كلمة مرور.
