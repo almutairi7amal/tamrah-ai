@@ -56,7 +56,6 @@ function Home() {
   const done = demo.actions.find((a) => a.id === rec.id);
   const snap = load.state === "ready" ? load.data : null;
   const live = snap && snap.connection === "connected" && !isStale(snap);
-  const get = (k: Reading["key"]) => snap?.readings.find((r) => r.key === k);
 
   function confirmDone() {
     const next = saveDemo({ actions: [...demo!.actions.filter((a) => a.id !== rec.id), { id: rec.id, at: Date.now() }] });
@@ -117,7 +116,9 @@ function Home() {
             <Offline onRetry={refresh} />
           ) : (
             <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-              {(md ? snap!.readings : [get("temperature")!, get("humidity")!]).map((r) => <ReadingCard key={r.key} r={r} />)}
+              {snap!.readings.map((r) => (
+                <div key={r.key} className={r.key === "temperature" || r.key === "humidity" ? "" : "hidden md:block"}><ReadingCard r={r} /></div>
+              ))}
             </div>
           )}
           <Button variant="secondary" className="mt-3 h-12 w-full text-base md:hidden" onClick={() => setReadingsOpen(true)} disabled={!live}>عرض باقي القراءات</Button>
@@ -156,8 +157,6 @@ function Home() {
     </div>
   );
 }
-
-const md = typeof window !== "undefined" && false; // desktop shows all via CSS below
 
 function ConnectionPill({ load, live }: { load: Load; live: boolean }) {
   const text = load.state === "loading" ? "جاري الاتصال…" : live ? "الجهاز متصل (محاكاة)" : "الجهاز غير متصل";
