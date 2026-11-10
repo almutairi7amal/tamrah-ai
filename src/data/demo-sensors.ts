@@ -33,9 +33,9 @@ export async function fetchReadings(): Promise<SensorSnapshot> {
     readings: [
       { key: "temperature", label: "حرارة الجو", value: 35.2, unit: "°C", status: "ok" },
       { key: "humidity", label: "رطوبة الجو", value: 42, unit: "%", status: "ok" },
-      { key: "soil", label: "رطوبة التربة", value: null, unit: "%", status: "uncalibrated", note: "غير متاحة حتى تتم المعايرة" },
+      { key: "soil", label: "رطوبة التربة", value: 36, unit: "%", status: "ok" },
       { key: "light", label: "شدة الإضاءة", value: 24600, unit: "lux", status: "ok" },
-      { key: "uv", label: "الأشعة فوق البنفسجية", value: null, unit: "", status: "uncalibrated", note: "غير متاحة حتى تتم المعايرة" },
+      { key: "uv", label: "الأشعة فوق البنفسجية", value: 4.2, unit: "UV index", status: "ok" },
     ],
   };
 }

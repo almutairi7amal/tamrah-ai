@@ -1,24 +1,51 @@
-# Tamrah
+﻿# تمرة
 
-Implement exactly the screenshot and nothing else
+واجهة عربية باتجاه RTL لمتابعة نضج التمر وقراءات الجهاز.
 
-This project was built with [Lovable](https://lovable.dev).
+## ما يعمل الآن
+- الدخول إلى تجربة بلا حساب، إضافة نخلة وصنف وعينة، ربط جهاز تجريبي، والإعدادات.
+- رفع صورة حتى 2MB، حفظ الصور والتحليلات التجريبية في المتصفح، واختيار قراءات السجل.
+- عرض مراحل زمنية أو خط نسبة الثمار الناضجة من 0 إلى 100، مع فرق بالنقاط المئوية.
+- الأصناف غير المدعومة تُحفظ دون تحليل. المحاكاة تدعم خلاص وسكري وصقعي فقط؛ هذه ليست قائمة دعم المودل الحقيقي.
+- بيانات التجربة في tamra-demo-v2 وحدها. بيانات الإصدار التجريبي القديم لا تُرحّل لأن المرحلة فيه كانت اختيارًا يدويًا.
+- الخروج يحفظ إعداد التجربة، وجرّبي تمرة يعود للمتابعة مباشرة إذا اكتمل الإعداد.
+- لا توجد حاليًا مصادقة أو Firebase أو خدمة استدلال أو قارئ QR فعلي. لا تُعرض نتائج حقيقية أو نجاح اقتران حقيقي.
 
-## Build with Lovable
+## التكامل المطلوب من الفريق
+العقد في src/services/analysis.ts والكيانات في src/lib/demo-store.ts. IntegrationAdapter عقد تجهيز فقط؛ لا يوجد محوّل Firebase منفذ ولا مسار مستخدم فعلي بعد. عند تنفيذ المحوّل يجب توصيل المسارات به ومراقبة جلسة Auth، وتوجيه المستخدم الذي لديه نخلة إلى المتابعة.
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/20c83e22-fa08-4188-8216-aa69a9641c2d).
+يلزم توفير:
+1. إعداد تطبيق Firebase العام (projectId, authDomain, appId, storageBucket, apiKey) ومزوّد Auth معتمد. هذه إعدادات عميل وليست بيانات اعتماد إدارية.
+2. محوّل Firebase Auth / Firestore / Storage لتنفيذ العقد، مع قواعد وصول وفق uid، ومزامنة الاشتراكات وإلغاء الاشتراك.
+3. خدمة موثوقة للتحقق الذري من رمز الجهاز وملكيته قبل ربطه؛ لا يحق للعميل تقرير نجاح الاقتران.
+4. مصدر heartbeat موثوق؛ آخر تواصل خلال 15 دقيقة يعني متصلًا. الربط مستقل عن الاتصال.
+5. endpoint لخدمة استدلال، المصادقة عليه، وإصدار المودل والأصناف المدعومة. تخزين ملف المودل لا يشغّله.
+6. عقد كاميرا الجهاز لتسجيل الصورة ووقت الالتقاط وربط palmId وsampleId.
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+بنية التخزين المقترحة (تُنشأ عند تنفيذ التكامل):
+- users/{uid}/palms/{palmId}: الاسم، الصنف، معرّف العينة.
+- devices/{deviceId}: المالك، palmId، linkedAt، lastSeen. التملك والتواصل يُكتبان من خدمة موثوقة.
+- users/{uid}/sensorReadings/{id}: deviceId، palmId، القيمة والوحدة وrecordedAt.
+- users/{uid}/images/{id}: palmId، sampleId، الصنف، capturedAt، source، مسار Storage.
+- users/{uid}/analyses/{id}: imageId، palmId، sampleId، الصنف، capturedAt، analyzedAt، status، stage، ripePercent الاختيارية، confidence الاختيارية (0–1)، modelVersion، measurement.
+- users/{uid}/interventions/{id}: palmId، sampleId، at، label.
 
-## Development
+كل قراءة وثيقة جديدة؛ لا يُستبدل السجل. يجب التحقق من تطابق ملكية ومراجع الصورة والنخلة والعينة في الخدمة، وفحص حدود القيم ووقت الالتقاط. تُستخدم validateResult للتحقق الأساسي من النتيجة.
+measurement تعريف ثابت للقياس؛ إذا تغيّر تعريف النسبة بين إصدارات المودل يجب تغييره لعدم جمع نتائج غير متكافئة. confidence ليست ripePercent. لا تتحول المرحلة إلى نسبة.
+قواعد Firestore وStorage يجب أن ترفض الوصول دون هوية مطابقة، وتمنع كتابة نتائج المودل أو نبض الجهاز من عميل غير مخول. لا توجد مفاتيح خادم في الواجهة. راعي الحذف وسياسة الاحتفاظ وحجم الصور عند التنفيذ.
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+## التطوير
+npm install
 npm run dev
-```
+npm test
+npm run build
+
+المشروع مرتبط بـ Lovable. لا تعدّلي ملفات مولّدة أو مخططات قاعدة البيانات المحكومة بـ Lovable يدويًا، ولا تعيدي كتابة تاريخ git المنشور.
+
+## الحفاظ على التصميم الأصلي
+استُرجعت صفحة «كيف حال نخلتي؟» وصفحة الدخول من Git (40b431e)، مع إعادة شكل خطوتَي ربط الجهاز وتعريف النخلة. تبقى الإضافات الوظيفية اللازمة فقط، ومنها إزالة المرحلة اليدوية وحفظ الصنف والعينة.
+متابعة النضج والرسم والسجل ورفع الصور في /tracking، وتُفتح من زر «متابعة نضج التمر وسجل التحليلات» أسفل أقسام الرئيسية.
+تمت المقارنة مع نسخة Git على عرضي 1440 و390 بكسل؛ تطابقت مواضع وأحجام وألوان وخطوط عناصر الأقسام الأصلية. زر المتابعة وتنبيه البيانات التجريبية إضافتان مقصودتان.
+
+## معاينة العرض أثناء التشغيل
+حسب طلب العرض، تعرض الواجهة حالة متصلة وبيانات مكتملة دون رسائل الربط غير المنفذ. إعداد المعاينة في src/services/presentation-preview.ts ويجهز بيانات محلية معزولة وصورة توضيحية للعذق وأربع نتائج وسجل حساسات. الشارة «معاينة» تميز العرض، ولا يتم تنفيذ مصادقة أو اقتران أو استدلال فعلي. اختيار صورة الجهاز يستخدم أصلًا توضيحيًا محليًا. بيانات الخادم وتكامل Firebase لم تتغير.

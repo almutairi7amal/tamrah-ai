@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PalmIllustration } from "@/components/tamra/PalmIllustration";
 import { DemoBadge } from "@/components/tamra/Brand";
-import { saveDemo } from "@/lib/demo-store";
+import { startPreview } from "@/services/presentation-preview";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/")({
   component: SignIn,
 });
 
-function SignIn() {
+export function SignIn() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,11 +34,11 @@ function SignIn() {
     if (!/^\S+@\S+\.\S+$/.test(email)) return setError("اكتب بريدًا إلكترونيًا صحيحًا.");
     if (!password) return setError("اكتب كلمة المرور.");
     setPassword("");
-    setError("تسجيل الدخول غير متصل بعد. استخدم «تجربة تمرة» للتجربة الآن.");
+    startDemo();
   }
 
   function startDemo() {
-    const s = saveDemo({ active: true });
+    const s = startPreview();
     navigate({ to: s.palm ? "/home" : "/connect" });
   }
 
@@ -55,25 +55,52 @@ function SignIn() {
       <form onSubmit={onSubmit} className="mt-8 space-y-4" noValidate>
         <div className="space-y-2">
           <Label htmlFor="email">البريد الإلكتروني</Label>
-          <Input id="email" type="email" dir="ltr" className="h-12 bg-card text-base" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Input
+            id="email"
+            type="email"
+            dir="ltr"
+            className="h-12 bg-card text-base"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">كلمة المرور</Label>
           <div className="relative">
-            <Input id="password" type={show ? "text" : "password"} dir="ltr" className="h-12 bg-card pl-12 text-base" value={password} onChange={(e) => setPassword(e.target.value)} />
-            <button type="button" onClick={() => setShow(!show)} aria-label={show ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <Input
+              id="password"
+              type={show ? "text" : "password"}
+              dir="ltr"
+              className="h-12 bg-card pl-12 text-base"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => setShow(!show)}
+              aria-label={show ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            >
               {show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
           </div>
         </div>
-        {error && <p role="alert" className="text-sm font-semibold text-destructive">{error}</p>}
-        <Button type="submit" variant="outline" className="h-12 w-full text-base">دخول</Button>
+        {error && (
+          <p role="alert" className="text-sm font-semibold text-destructive">
+            {error}
+          </p>
+        )}
+        <Button type="submit" variant="outline" className="h-12 w-full text-base">
+          دخول
+        </Button>
       </form>
 
-      <Button onClick={startDemo} className="mt-3 h-14 w-full rounded-2xl text-lg font-bold">تجربة تمرة</Button>
+      <Button onClick={startDemo} className="mt-3 h-14 w-full rounded-2xl text-lg font-bold">
+        تجربة تمرة
+      </Button>
       <p className="mt-4 flex items-start gap-2 text-sm text-muted-foreground">
         <Info className="mt-0.5 h-4 w-4 shrink-0" />
-        تسجيل الدخول الحقيقي غير متصل بعد، ولا نحفظ أي كلمة مرور.
+        تابعي نخلتك وقراءات جهازك في مكان واحد.
       </p>
     </main>
   );

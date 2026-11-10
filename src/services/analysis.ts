@@ -1,38 +1,63 @@
-// Example analysis. Replace with the real AI service later.
-export interface Observation {
-  title: string;
-  detail: string;
-  note: string;
+﻿import type {
+  Analysis,
+  Capture,
+  Device,
+  Intervention,
+  PalmSetup,
+  SensorReading,
+} from "@/lib/demo-store";
+export interface IntegrationAdapter {
+  signIn(email: string, password: string): Promise<{ uid: string }>;
+  currentUser(): Promise<{ uid: string } | null>;
+  load(uid: string): Promise<{
+    palm: PalmSetup | null;
+    devices: Device[];
+    images: Capture[];
+    analyses: Analysis[];
+    sensors: SensorReading[];
+    interventions: Intervention[];
+  }>;
+  savePalm(uid: string, palm: PalmSetup): Promise<void>;
+  claimDevice(uid: string, palmId: string, code: string): Promise<Device>;
+  upload(uid: string, capture: Omit<Capture, "url">, file: File): Promise<Capture>;
+  requestAnalysis(uid: string, imageId: string): Promise<Analysis>;
+  subscribe(uid: string, onChange: () => void): () => void;
 }
-
-export interface Recommendation {
-  id: string;
-  title: string;
-  summary: string;
-  reason: string;
-  steps: string[];
-  doneLabel: string;
-}
-
-export function getObservation(): Observation {
-  return {
-    title: "حرارة الجو ارتفعت خلال ساعة",
-    detail: "من 32.8° إلى 35.2°",
-    note: "تحليل تجريبي لتوضيح الفكرة، وليس تشخيصًا لمرض.",
-  };
-}
-
-export function getRecommendation(): Recommendation {
-  return {
-    id: "ventilate-bunch-covers",
-    title: "تأكد من تهوية أغطية العذوق",
-    summary: "إذا كانت العذوق مغطاة، تحقق من عدم انسداد فتحات التهوية.",
-    reason: "مع ارتفاع الحرارة وانخفاض الرطوبة، الأغطية المغلقة قد تحبس الحرارة حول الثمار.",
-    steps: [
-      "تأكد إن العذوق عليها أغطية أصلًا.",
-      "افحص فتحات التهوية: هل هي مسدودة؟",
-      "سجّل ملاحظاتك وتابع القراءات بعدها.",
-    ],
-    doneLabel: "تم، فحصت الأغطية",
-  };
+export const integration: IntegrationAdapter | null = null;
+export const modelConfig = { supportedVarieties: [] as string[] };
+export const demoModelConfig = {
+  supportedVarieties: ["خلاص", "سكري", "صقعي", "برحي", "عجوة", "رزيز"],
+};
+export const analysisLabels = {
+  not_started: "لم يبدأ التحليل",
+  processing: "جارٍ التحليل",
+  completed: "اكتمل التحليل",
+  failed: "تعذّر التحليل",
+  unsuitable: "صورة غير مناسبة",
+};
+export function validateResult(result: Analysis) {
+  if (
+    !result.palmId ||
+    !result.sampleId ||
+    !result.imageId ||
+    !result.variety ||
+    !result.modelVersion ||
+    !result.measurement ||
+    !Number.isFinite(Date.parse(result.capturedAt)) ||
+    !Number.isFinite(Date.parse(result.analyzedAt))
+  )
+    throw new Error("بيانات التحليل غير مكتملة");
+  if (
+    result.ripePercent !== undefined &&
+    (!Number.isFinite(result.ripePercent) || result.ripePercent < 0 || result.ripePercent > 100)
+  )
+    throw new Error("نسبة غير صالحة");
+  if (
+    result.confidence !== undefined &&
+    (!Number.isFinite(result.confidence) || result.confidence < 0 || result.confidence > 1)
+  )
+    throw new Error("ثقة غير صالحة");
+  if (result.status === "completed" && !result.stage && result.ripePercent === undefined)
+    throw new Error("النتيجة مفقودة");
+  return result;
 }

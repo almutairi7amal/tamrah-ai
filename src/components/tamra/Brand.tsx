@@ -1,9 +1,9 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 
-export function DemoBadge() {
+export function DemoBadge({ label = "معاينة" }: { label?: string }) {
   return (
     <span className="inline-flex items-center rounded-full bg-amber px-3 py-1 text-xs font-semibold text-amber-foreground">
-      عرض تجريبي
+      {label}
     </span>
   );
 }
