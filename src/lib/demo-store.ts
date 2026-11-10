@@ -105,7 +105,9 @@ export function clearDemo() {
 export function connected(device: Device | null, now = Date.now()) {
   if (!device?.lastSeen) return false;
   const age = now - Date.parse(device.lastSeen);
-  return age >= 0 && age <= 15 * 60 * 1000;
+  // Allow a few minutes of clock difference between the device and this screen: a reading that
+  // just arrived can look slightly "in the future" when this clock is a little behind.
+  return age >= -5 * 60 * 1000 && age <= 15 * 60 * 1000;
 }
 export function comparable(analyses: Analysis[], palm: PalmSetup, measurement: string) {
   return analyses

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { adviseLatest } from "@/ai/advice";
 import { snapshotFromSensors } from "@/data/demo-sensors";
-import { loadDemo, saveDemo } from "@/lib/demo-store";
+import { connected, loadDemo, saveDemo } from "@/lib/demo-store";
 import { applyDeviceLatest, diffToCloud } from "@/services/cloud";
 import { SOIL_RAW_LABEL, toSensorReadings, uvIndex } from "@/services/device-readings";
 
@@ -76,6 +76,14 @@ describe("team device readings (/readings/latest)", () => {
     const keys = Object.keys(diffToCloud(base, next));
     expect(keys.every((k) => k.startsWith("sensorReadings/dev-1-"))).toBe(true);
     expect(keys).toHaveLength(5);
+  });
+
+  it("counts a just-arrived reading as connected even if this clock is slightly behind", () => {
+    const device = { id: "d", palmId: "p", linkedAt: "x", lastSeen: "2026-11-10T18:20:00.000Z" };
+    expect(connected(device, Date.parse("2026-11-10T18:19:58Z"))).toBe(true); // 2 s behind
+    expect(connected(device, Date.parse("2026-11-10T18:30:00Z"))).toBe(true); // 10 min old
+    expect(connected(device, Date.parse("2026-11-10T18:40:00Z"))).toBe(false); // 20 min old
+    expect(connected(device, Date.parse("2026-11-10T18:00:00Z"))).toBe(false); // 20 min ahead
   });
 
   it("ignores device data in preview mode or without a paired device", () => {
